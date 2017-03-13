@@ -6,6 +6,4 @@ COPY package.json .
 RUN npm install
 COPY . .
 
-DDD
-
 CMD ["node", "server.js"]
