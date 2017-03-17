@@ -25,6 +25,9 @@ app.get('/redirect/routename', function (req, res) {
     res.send('REDIRECT!!');
 });
 
+app.get('/api/ping', function (req, res) {
+    res.send();
+});
 // api ------------------------------------------------------------
 app.get('/api', function (req, res) {
     // Connect to redis container using environment variable
@@ -48,7 +51,7 @@ app.get('/api', function (req, res) {
 //     });
 // });
 
-var port = 8000;
+var port = 5000;
 var server = app.listen(port, function () {
     console.log('Listening on port ' + port);
 });
