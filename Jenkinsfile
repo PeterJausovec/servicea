@@ -11,6 +11,11 @@ pipeline {
                 echo 'Testing'
             }
         }
+        stage('Manual Intervention') {
+            steps {
+                input 'Deploy the service?'
+            }
+        }
         stage('Deploy') {
             steps {
                 echo 'Deploying'
