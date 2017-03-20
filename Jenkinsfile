@@ -1,9 +1,19 @@
 pipeline {
-    agent { docker 'node:6.3' }
+    agent any
     stages {
-        stage('Create Docker Image') {
+        stage('Build') {
             steps {
-                docker.build 'myimagetest'
+                echo 'Building'
+            }
+        }
+        stage('Test') {
+            steps {
+                echo 'Testing'
+            }
+        }
+        stage('Deploy') {
+            steps {
+                echo 'Deploying'
             }
         }
     }
