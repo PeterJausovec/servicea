@@ -4,8 +4,7 @@ pipeline {
         stage('Build') {
             steps {
                 echo "Building change ${env.CHANGE_ID} and creating build: ${env.BUILD_ID}"
-                sh returnStdout: true, script: '''kubectl get pods
-                '''
+                sh '''kubectl get pods'''
             }
         }
         stage('Test') {
