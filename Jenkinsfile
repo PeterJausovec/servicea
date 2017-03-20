@@ -7,7 +7,7 @@ pipeline {
             steps {
                 echo "Building change ${env.CHANGE_ID} and creating build: ${env.BUILD_ID}"
                 echo "Using image: ${dockerImage}"
-                sh "kubectl get pods --all-namespaces"
+                sh 'kubectl apply -f servicea.yaml'
             }
         }
         stage('Test') {
