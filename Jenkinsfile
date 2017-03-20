@@ -8,6 +8,7 @@ pipeline {
                 echo "Building change ${env.CHANGE_ID} and creating build: ${env.BUILD_ID}"
                 echo "${Greeting} World!"
             }
+            docker.build("myrepo:${env.BUILD_NUMBER}", '.') 
         }
         stage('Test') {
             steps {
@@ -26,5 +27,3 @@ pipeline {
         }
     }
 }
-
-2B3CA2CV1AH317989
