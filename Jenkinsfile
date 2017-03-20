@@ -5,7 +5,7 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                echo "Building ${env.BUILD_ID}"
+                echo "Building change ${env.CHANGE_ID} and creating build: ${env.BUILD_ID}"
                 echo "${Greeting} World!"
             }
         }
