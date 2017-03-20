@@ -1,12 +1,8 @@
 pipeline {
-    agent { docker 'node:6.3' }
+    agent any
     stages {
-        stage('build') {
-            steps {
-                sh 'echo "Running Install"'
-                sh 'sudo npm install'
-                sh 'echo All done!!!!'
-            }
+        stage('Create Docker Image') {
+            docker.build('myimage:${env.BUILD_NUMBER')
         }
     }
 }
