@@ -1,8 +1,11 @@
 pipeline {
-    agent any
+    agent { docker 'node:6.3' }
     stages {
         stage('Create Docker Image') {
-            docker.build('myimage:${env.BUILD_NUMBER')
+            steps {
+                sh 'docker build -t someImage:${env.BUILD_NUMBER'
+            }
         }
+
     }
 }
