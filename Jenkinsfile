@@ -7,8 +7,8 @@ pipeline {
             steps {
                 echo "Building change ${env.CHANGE_ID} and creating build: ${env.BUILD_ID}"
                 echo "${Greeting} World!"
+                docker.build("myrepo:${env.BUILD_NUMBER}", '.') 
             }
-            docker.build("myrepo:${env.BUILD_NUMBER}", '.') 
         }
         stage('Test') {
             steps {
