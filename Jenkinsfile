@@ -7,7 +7,7 @@ pipeline {
             steps {
                 echo "Building change ${env.CHANGE_ID} and creating build: ${env.BUILD_ID}"
                 echo "Using image: ${dockerImage}"
-                sh "kubectl"
+                sh "kubectl get pods --all-namespaces"
             }
         }
         stage('Test') {
