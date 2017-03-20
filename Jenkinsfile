@@ -1,9 +1,12 @@
+properties([parameters([string(description: 'Docker image to use', name: 'dockerImage')])])
+
 pipeline {
     agent any
     stages {
         stage('Build') {
             steps {
                 echo "Building change ${env.CHANGE_ID} and creating build: ${env.BUILD_ID}"
+                echo "Using image: ${dockerImage}"
             }
         }
         stage('Test') {
