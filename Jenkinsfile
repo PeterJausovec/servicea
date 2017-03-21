@@ -1,10 +1,13 @@
 pipeline {
     agent any
+    environment {
+        KUBECONFIG = '/home/azureuser/.kube/config'
+    }
     stages {
         stage('Build') {
             steps {
                 echo "Building change ${env.CHANGE_ID} and creating build: ${env.BUILD_ID}"
-                sh '''sudo kubectl config current-context'''
+                sh '''kubectl config current-context'''
             }
         }
         stage('Test') {
