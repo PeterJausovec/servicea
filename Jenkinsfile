@@ -10,6 +10,8 @@ pipeline {
         stage('Prepare yaml file') {
             steps {
                 echo "Preparing YAML file"
+                echo '${params.IMAGE_NAME}'
+                echo "${params.IMAGE_NAME}"
                 sh """sed -ie 's/IMAGENAME/${params.IMAGE_NAME}/g' servicea.yaml"""
             }
         }
