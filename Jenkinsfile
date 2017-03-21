@@ -1,8 +1,9 @@
-parameters {
-    string(name: 'IMAGE_NAME', defaultValue: 'acrfznilp.azurecr.io/peterj/service-a:1', description: 'Image to deploy:')
-}
+
 pipeline {
     agent any
+    parameters {
+        string(name: 'IMAGE_NAME', defaultValue: 'acrfznilp.azurecr.io/peterj/service-a:1', description: 'Image to deploy:')
+    }
     environment {
         KUBECONFIG = '/var/lib/jenkins/.kube/config'
     }
