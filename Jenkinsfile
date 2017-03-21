@@ -4,10 +4,7 @@ pipeline {
         stage('Build') {
             steps {
                 echo "Building change ${env.CHANGE_ID} and creating build: ${env.BUILD_ID}"
-                sh 'ls'
-                sh 'pwd'
-                sh 'ls ~/.kube'
-                sh '''kubectl config current-context'''
+                sh '''sudo kubectl config current-context'''
             }
         }
         stage('Test') {
