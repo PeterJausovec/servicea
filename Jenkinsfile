@@ -7,7 +7,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 echo "Deplying to Kubernetes"
-                sh '''kubectl apply servicea.yaml'''
+                sh '''kubectl apply -f servicea.yaml'''
             }
         }
     }
