@@ -11,14 +11,12 @@ pipeline {
         stage('Prepare yaml file') {
             steps {
                 echo "Preparing YAML file"
-                echo '${params.IMAGE_NAME}'
-                echo "${params.IMAGE_NAME}"
-                sh """sed -ie 's/IMAGENAME/${params.IMAGE_NAME}/g' servicea.yaml"""
+                sh """sed -ie \\'s/IMAGENAME/${params.IMAGE_NAME}/g\\' servicea.yaml"""
             }
         }
         stage('Deploy') {
             steps {
-                echo 'Deploying image ${params.IMAGE_NAME}'
+                echo "Deploying image ${params.IMAGE_NAME}"
                 sh '''kubectl apply -f servicea.yaml'''
             }
         }
