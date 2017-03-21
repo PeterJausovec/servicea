@@ -1,22 +1,20 @@
 
 pipeline {
     agent any
-    parameters {
-        string(name: 'IMAGE_NAME', defaultValue: 'acrfznilp.azurecr.io/peterj/service-a:1', description: 'Image to deploy:')
-    }
     environment {
         KUBECONFIG = '/var/lib/jenkins/.kube/config'
+        IMAGE_NAME = 'acrfznilp.azurecr.io/peterj/service-a:' + ${env.BUILD_NUMBER}
     }
     stages {
         stage('Prepare yaml file') {
             steps {
                 echo "Preparing YAML file"
-                sh "sed -ie 's~IMAGENAME~${params.IMAGE_NAME}~g' servicea.yaml"
+                sh "sed -ie 's~IMAGENAME~${env.IMAGE_NAME}~g' servicea.yaml"
             }
         }
         stage('Deploy') {
             steps {
-                echo "Deploying image ${params.IMAGE_NAME}"
+                echo "Deploying image ${env.IMAGE_NAME}"
                 sh '''kubectl apply -f servicea.yaml'''
             }
         }
