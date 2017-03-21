@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        KUBECONFIG = '/home/azureuser/.kube/config'
+        KUBECONFIG = '/var/lib/jenkins/.kube/config'
     }
     stages {
         stage('Build') {
