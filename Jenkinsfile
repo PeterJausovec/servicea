@@ -4,7 +4,7 @@ pipeline {
         stage('Build') {
             steps {
                 echo "Building change ${env.CHANGE_ID} and creating build: ${env.BUILD_ID}"
-                sh '''kubectl config view'''
+                sh '''kubectl config current-context'''
             }
         }
         stage('Test') {
