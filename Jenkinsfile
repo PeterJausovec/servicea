@@ -26,18 +26,18 @@ pipeline {
                 sh '''kubectl apply -f servicea.yaml'''
 
                 script {
-                    env.SHOULD_CONTINUE = input message: 'Should continue deploying to Prod?', ok: 'Yes',
+                    env.DEPLOY_TO_PROD = input message: 'Should continue deploying to Prod?', ok: 'Yes',
                                 parameters: [choice(name: 'SHOULD_CONTINUE', choices: 'yes\nno', description: 'Should continue?')]
                 }
-                echo "${env.SHOULD_CONTINUE}"
+                echo "${env.DEPLOY_TO_PROD}"
             }
         }
         stage ('Deploy to Prod namespace') {
             when {
-                environment name: 'SHOULD_CONTINUE', value: 'Yes!'
+                environment name: 'DEPLOY_TO_PROD', value: 'yes'
             }
             steps {
-                echo 'deploy to prod'
+                echo 'deploying to prod'
             }
         }
     }
