@@ -25,7 +25,7 @@ pipeline {
                 echo "Create a logical service-a"
                 sh "kubectl expose deployment l5d --name=${params.SERVICE_NAME} --port=80"
                 script {
-                    env.LOGICAL_SERVICE_IP=sh "kubectl get service ${params.service_NAME} -o go-template={{.spec.clusterIP}}"
+                    env.LOGICAL_SERVICE_IP=sh "kubectl get service ${params.SERVICE_NAME} -o go-template={{.spec.clusterIP}}"
                 }
                 echo "Logical service IP: ${env.LOGICAL_SERVICE_IP}"
             }
