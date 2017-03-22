@@ -76,7 +76,8 @@ pipeline {
             echo "Deployment succeeded."
         }
         failure {
-            echo "Rolling back!"
+            echo "Rolling back - cleanup"
+            sh "kubectl delete deployment,service -l run=${params.SERVICE_NAME}-canary"
         }
     }
 }
