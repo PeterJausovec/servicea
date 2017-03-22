@@ -12,7 +12,7 @@ pipeline {
     stages {
         stage ('Deploy prerequisites (l5d)') {
             steps {
-                sh "Check if l5d is deployed yet"
+                echo "Check if l5d is deployed yet"
                 // Check if l5d is already deployed and 
                 // deploy it if it isn't
             }
@@ -27,7 +27,9 @@ pipeline {
             }
         }
         stage ('Deploy to Prod namespace')  {
-            echo 'deploy to prod'
+            steps {
+                echo 'deploy to prod'
+            }
         }
     }
     post {
