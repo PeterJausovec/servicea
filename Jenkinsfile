@@ -2,7 +2,7 @@
 pipeline {
     agent any
     parameters {
-        string(name:'IMAGE_NAME', defaultValue: 'peterj/service-a', description: 'image name'),
+        string(name:'IMAGE_NAME', defaultValue: 'peterj/service-a', description: 'image name')
         string(name:'IMAGE_TAG', defaultValue:'1', description: 'image tag (should be build number)')
     }
     environment {
