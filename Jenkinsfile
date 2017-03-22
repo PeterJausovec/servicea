@@ -44,7 +44,7 @@ pipeline {
                 }
             }
         }
-        stage ('Deploy the service') {
+        stage ('Check & deploy the canary service') {
              when {
                 environment name: 'STABLE_SERVICE_EXISTS', value: 'true'
             }
@@ -52,7 +52,8 @@ pipeline {
                 // Stable service exists, deploy to canary
                 echo 'Stable service exists - do the canary'
             }
-
+        }
+        stage ('Check & deploy the stable service') {
             when {
                 environment name: 'STABLE_SERVICE_EXISTS', value: 'false'
             }
