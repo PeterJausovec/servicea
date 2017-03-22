@@ -15,15 +15,10 @@ pipeline {
             steps {
                 echo "Deploy L5D"
                 sh 'kubectl apply -f https://raw.githubusercontent.com/stepro/k8s-l5d/master/l5d.yaml'
-
-                // Check if l5d is already deployed and 
-                // deploy it if it isn't
             }
         }
         stage ('Create logical service') {
             steps {
-
-                // Check if logical service exists
                 echo "Create a logical service for: ${params.SERVICE_NAME}"
                 script {
                     try {
@@ -34,6 +29,20 @@ pipeline {
                     env.LOGICAL_SERVICE_IP = sh(returnStdout: true, script: "kubectl get service ${params.SERVICE_NAME} -o go-template={{.spec.clusterIP}}")
                 }
                 echo "Logical service IP: ${env.LOGICAL_SERVICE_IP}"
+            }
+        }
+
+        stage ('Deploy the canary') {
+            steps {
+                sh "kubectl run ${params.SERVICE_NAME}-canary --image=${params.REGISTRY_URL}/${params.IMAGE_NAME}:${params.IMAGE_TAG} --port=80"
+                sh "kubectl expose deployment ${params.SERVICE_NAME}-canary --via=${params.SERVICE_NAME},track=canary,run=${params.SERVICE_NAME}-canary --port =80"
+                script {
+                    env.SERVICE_CANARY_IP=sh(returnStdout: true, script: "kubectl get service ${params.SERVICE_NAME}-canary -o go-template={{.spec.clusterIP}}")
+                }
+                echo "CANARY IP: ${env.SERVICE_CANARY_IP}"
+                script {
+                    env.DEPLOY_TO_PROD = input message: 'Manual Judgement', ok:'Submit', parameters: [choice(name: 'Deploy to production?', choices: 'yes\nno', description: '')]
+                }
             }
         }
         // stage ('Deploy to Dev namespace') {
@@ -87,8 +96,6 @@ pipeline {
 // kubectl annotate service service-b l5d=/svc/service-b-STABLE
 
 // Now you can curl to the logical service: curl SERVICE_B
-
-
 
 // 4. Deploy the canary (just like step 2 above) version:
 // kubectl run service-b-CANARY --image=[image] --port=80 &&\
