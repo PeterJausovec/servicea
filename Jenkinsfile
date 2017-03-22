@@ -5,6 +5,7 @@ pipeline {
         string(name:'REGISTRY_URL', defaultValue: 'acrfznilp.azurecr.io', description: 'docker image repository')
         string(name:'IMAGE_NAME', defaultValue: 'peterj/service-a', description: 'image name')
         string(name:'IMAGE_TAG', defaultValue:'1', description: 'image tag (should be build number)')
+        string(name:'SERVICE_NAME', defaultValue:'service-a', description: 'Service name that is being deployed')
     }
     environment {
         KUBECONFIG = '/var/lib/jenkins/.kube/config'
@@ -17,6 +18,16 @@ pipeline {
 
                 // Check if l5d is already deployed and 
                 // deploy it if it isn't
+            }
+        }
+        stage ('Create logical service') {
+            steps {
+                echo "Create a logical service-a"
+                sh "kubectl expose deployment l5d --name=${params.SERVICE_NAME} --port=80"
+                script {
+                    env.LOGICAL_SERVICE_IP=sh "kubectl get service ${params.service_NAME} -o go-template={{.spec.clusterIP}}"
+                }
+                echo "Logical service IP: ${env.LOGICAL_SERVICE_IP}"
             }
         }
         // stage ('Deploy to Dev namespace') {
