@@ -10,17 +10,33 @@ pipeline {
         KUBECONFIG = '/var/lib/jenkins/.kube/config'
     }
     stages {
-        stage('Prepare yaml file') {
+        stage ('Deploy prerequisites (l5d)') {
+            steps {
+                sh "Check if l5d is deployed yet"
+                // Check if l5d is already deployed and 
+                // deploy it if it isn't
+            }
+        }
+        stage ('Deploy to Dev namespace') {
             steps {
                 echo "Preparing YAML file"
                 sh "sed -ie 's~IMAGENAME~${params.REGISTRY_URL}/${params.IMAGE_NAME}:${params.IMAGE_TAG}~g' servicea.yaml"
             }
-        }
-        stage('Deploy') {
             steps {
                 echo "Deploying image ${params.REGISTRY_URL}/${params.IMAGE_NAME}:${params.IMAGE_TAG}"
                 sh '''kubectl apply -f servicea.yaml'''
             }
+        }
+        stage ('Deploy to Prod namespace')  {
+
+        }
+    }
+    post {
+        always {
+            echo "Deployment completed."
+        }
+        success {
+            echo "Deployment succeeded."
         }
     }
 }
