@@ -1,5 +1,5 @@
 FROM node:argon
-EXPOSE 5000
+EXPOSE 80
 
 WORKDIR /app
 COPY package.json .
