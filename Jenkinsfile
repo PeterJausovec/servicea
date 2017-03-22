@@ -21,14 +21,13 @@ pipeline {
             steps {
                 echo "Preparing YAML file"
                 sh "sed -ie 's~IMAGENAME~${params.REGISTRY_URL}/${params.IMAGE_NAME}:${params.IMAGE_TAG}~g' servicea.yaml"
-            }
-            steps {
+
                 echo "Deploying image ${params.REGISTRY_URL}/${params.IMAGE_NAME}:${params.IMAGE_TAG}"
                 sh '''kubectl apply -f servicea.yaml'''
             }
         }
         stage ('Deploy to Prod namespace')  {
-
+            echo 'deploy to prod'
         }
     }
     post {
