@@ -26,7 +26,7 @@ pipeline {
                 sh '''kubectl apply -f servicea.yaml'''
 
                 script {
-                    env.DEPLOY_TO_PROD = input message: 'Should continue deploying to Prod?', ok:'Submit', parameters: [choice(name: 'Deploy to production?', choices: 'yes\nno', description: 'Should continue?')]
+                    env.DEPLOY_TO_PROD = input message: 'Manual Judgement', ok:'Submit', parameters: [choice(name: 'Deploy to production?', choices: 'yes\nno', description: '')]
                 }
                 echo "${env.DEPLOY_TO_PROD}"
             }
