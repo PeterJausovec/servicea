@@ -31,7 +31,7 @@ pipeline {
                     } catch (exp) {
                         echo "Logical service ${params.SERVICE_NAME} exists"
                     }
-                    env.LOGICAL_SERVICE_IP = sh "kubectl get service ${params.SERVICE_NAME} -o go-template={{.spec.clusterIP}}"
+                    env.LOGICAL_SERVICE_IP = sh(returnStdout: true, script: "kubectl get service ${params.SERVICE_NAME} -o go-template={{.spec.clusterIP}}")
                 }
                 echo "Logical service IP: ${env.LOGICAL_SERVICE_IP}"
             }
