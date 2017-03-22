@@ -29,7 +29,7 @@ pipeline {
                     env.SHOULD_CONTINUE = input message: 'Should continue deploying to Prod?', ok: 'Yes',
                                 parameters: [choice(name: 'SHOULD_CONTINUE', choices: 'yes\nno', description: 'Should continue?')]
                 }
-                echo ${env.SHOULD_CONTINUE}
+                echo "${env.SHOULD_CONTINUE}"
             }
         }
         stage ('Deploy to Prod namespace') {
