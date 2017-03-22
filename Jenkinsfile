@@ -22,10 +22,16 @@ pipeline {
         }
         stage ('Create logical service') {
             steps {
-                echo "Create a logical service-a"
-                sh "kubectl expose deployment l5d --name=${params.SERVICE_NAME} --port=80"
+
+                // Check if logical service exists
+                echo "Create a logical service for: ${params.SERVICE_NAME}"
                 script {
-                    env.LOGICAL_SERVICE_IP=sh "kubectl get service ${params.SERVICE_NAME} -o go-template={{.spec.clusterIP}}"
+                    try {
+                        sh "kubectl expose deployment l5d --name=${params.SERVICE_NAME} --port=80"
+                    } catch (exp) {
+                        echo "Logical service ${params.SERVICE_NAME} exists"
+                    }
+                    env.LOGICAL_SERVICE_IP = sh "kubectl get service ${params.SERVICE_NAME} -o go-template={{.spec.clusterIP}}"
                 }
                 echo "Logical service IP: ${env.LOGICAL_SERVICE_IP}"
             }
@@ -59,6 +65,9 @@ pipeline {
         }
         success {
             echo "Deployment succeeded."
+        }
+        failure {
+            echo "Rolling back!"
         }
     }
 }
