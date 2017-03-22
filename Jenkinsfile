@@ -35,7 +35,7 @@ pipeline {
         stage ('Deploy the canary') {
             steps {
                 sh "kubectl run ${params.SERVICE_NAME}-canary --image=${params.REGISTRY_URL}/${params.IMAGE_NAME}:${params.IMAGE_TAG} --port=80"
-                sh "kubectl expose deployment ${params.SERVICE_NAME}-canary --via=${params.SERVICE_NAME},track=canary,run=${params.SERVICE_NAME}-canary --port=80"
+                sh "kubectl expose deployment ${params.SERVICE_NAME}-canary -l --via=${params.SERVICE_NAME},track=canary,run=${params.SERVICE_NAME}-canary --port=80"
                 script {
                     env.SERVICE_CANARY_IP=sh(returnStdout: true, script: "kubectl get service ${params.SERVICE_NAME}-canary -o go-template={{.spec.clusterIP}}")
                 }
