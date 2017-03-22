@@ -5,11 +5,6 @@ pipeline {
         string(name:'REGISTRY_URL', defaultValue: 'acrfznilp.azurecr.io', description: 'docker image repository')
         string(name:'IMAGE_NAME', defaultValue: 'peterj/service-a', description: 'image name')
         string(name:'IMAGE_TAG', defaultValue:'1', description: 'image tag (should be build number)')
-        choice(
-            choices:'Continue\nAbort',
-            description: '',
-            name:'REQUESTED_ACTION'
-        )
     }
     environment {
         KUBECONFIG = '/var/lib/jenkins/.kube/config'
@@ -34,6 +29,7 @@ pipeline {
                     env.SHOULD_CONTINUE = input message: 'Should continue deploying to Prod?', ok: 'Yes',
                                 parameters: [choice(name: 'SHOULD_CONTINUE', choices: 'yes\nno', description: 'Should continue?')]
                 }
+                echo ${env.SHOULD_CONTINUE}
             }
         }
         stage ('Deploy to Prod namespace') {
