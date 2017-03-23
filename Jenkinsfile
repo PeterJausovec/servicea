@@ -62,7 +62,7 @@ pipeline {
                 echo "Deploying the stable service image: ${params.REGISTRY_URL}/${params.IMAGE_NAME}:${params.IMAGE_TAG}"
                 sh "kubectl run ${params.SERVICE_NAME}-stable --image=${params.REGISTRY_URL}/${params.IMAGE_NAME}:${params.IMAGE_TAG} --port=80"
                 sh "kubectl expose deployment ${params.SERVICE_NAME}-stable -l via=${params.SERVICE_NAME},track=stable,run=${params.SERVICE_NAME}-stable --port=80"
-                sh "kubectl annotate service ${params.SERVICE_NAME}-stable l5d=/svc/${params.SERVICE_NAME}-stable"
+                sh "kubectl annotate service ${params.SERVICE_NAME} l5d=/svc/${params.SERVICE_NAME}-stable"
                 script {
                     env.SERVICE_STABLE_IP=sh(returnStdout: true, script: "kubectl get service ${params.SERVICE_NAME}-stable -o go-template={{.spec.clusterIP}}")
                 }
