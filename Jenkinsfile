@@ -140,15 +140,16 @@ pipeline {
         stage ('Cleanup') {
             steps {
                 script {
-                    env.EXISTING_SERVICE_NAME = sh(returnStdout: true, script:"kubectl get service --selector=via=${params.SERVICE_NAME},track=stable -o jsonpath='{.items[0].metadata.name}'")
-                    echo "EXISTING SERVICE NAME: ${env.EXISTING_SERVICE_NAME}"
-                    if (env.EXISTING_SERVICE_NAME?.trim()) {
-                        echo "Delete the original deployment and service: ${env.EXISTING_SERVICE_NAME}"
-                        sh "kubectl delete deployment -l run=${env.EXISTING_SERVICE_NAME}"
-                        sh "kubectl delete service -l run=${env.EXISTING_SERVICE_NAME}"
+                    if (env.CANARY_ROLLOUT == "true") {
+                        env.EXISTING_SERVICE_NAME = sh(returnStdout: true, script:"kubectl get service --selector=via=${params.SERVICE_NAME},track=stable -o jsonpath='{.items[0].metadata.name}'")
+                        if (env.EXISTING_SERVICE_NAME?.trim()) {
+                            echo "Delete the original deployment and service: ${env.EXISTING_SERVICE_NAME}"
+                            sh "kubectl delete deployment -l run=${env.EXISTING_SERVICE_NAME}"
+                            sh "kubectl delete service -l run=${env.EXISTING_SERVICE_NAME}"
 
-                        echo "Re-label canary version as stable version"
-                        sh "kubectl label --overwrite service ${params.SERVICE_NAME}-${params.IMAGE_TAG} track=stable"
+                            echo "Re-label canary version as stable version"
+                            sh "kubectl label --overwrite service ${params.SERVICE_NAME}-${params.IMAGE_TAG} track=stable"
+                        }
                     }
                 }
             }
