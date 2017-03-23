@@ -71,7 +71,6 @@ pipeline {
                 echo "Deploying the canary service image: ${params.REGISTRY_URL}/${params.IMAGE_NAME}:${params.IMAGE_TAG}"
                 sh "kubectl run ${params.SERVICE_NAME}-canary --image=${params.REGISTRY_URL}/${params.IMAGE_NAME}:${params.IMAGE_TAG} --port=80"
                 sh "kubectl expose deployment ${params.SERVICE_NAME}-canary -l via=${params.SERVICE_NAME},track=canary,run=${params.SERVICE_NAME}-canary --port=80"
-                sh "kubectl annotate service ${params.SERVICE_NAME} l5d=/svc/${params.SERVICE_NAME}-canary"
                 script {
                     // TODO: Wait for the service IP to become available
                     env.SERVICE_CANARY_IP=sh(returnStdout: true, script: "kubectl get service ${params.SERVICE_NAME}-canary -o go-template={{.spec.clusterIP}}")
@@ -102,7 +101,8 @@ pipeline {
             echo "Deployment succeeded."
         }
         failure {
-            echo "Failure - removing both stable and canary versions"
+            echo "Failure - removing all services (logical, canary, stable)"
+            sh "kubectl delete deployment,service -l run=${params.SERVICE_NAME}"
             sh "kubectl delete deployment,service -l run=${params.SERVICE_NAME}-canary"
             sh "kubectl delete deployment,service -l run=${params.SERVICE_NAME}-stable"
         }
