@@ -88,6 +88,11 @@ pipeline {
             }
             steps {
                 echo "DO THE CANARY ROLLOUT HERE!!!!"
+                script {
+                    [5, 10, 25, 50, 75, 100].each {
+                        echo "STEP: ${it}"
+                    }
+                }
             }
         }
     }
