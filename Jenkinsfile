@@ -13,16 +13,15 @@ pipeline {
     stages {
         stage ('Deploy') {
             steps {
-                echo "Deploy"
                 sh 'kubectl apply -f https://raw.githubusercontent.com/stepro/k8s-l5d/master/l5d.yaml'
-
-                echo "Create a logical service for: ${params.SERVICE_NAME}"
                 script {
                     try {
                         sh "kubectl expose deployment l5d --name=${params.SERVICE_NAME} --port=80"
                     } catch (exc) {
                         echo "Logical service ${params.SERVICE_NAME} exists"
                     }
+
+                    sh "until [ \"$(curl --connect-timeout 1 -s $(kubectl get service ${params.SERVICE_NAME} -o go-template={{.spec.clusterIP}}))\" ]; do echo -n .; done"
                     env.LOGICAL_SERVICE_IP = sh(returnStdout: true, script: "kubectl get service ${params.SERVICE_NAME} -o go-template={{.spec.clusterIP}}")
                 }
                 echo "Logical service IP: ${env.LOGICAL_SERVICE_IP}"
