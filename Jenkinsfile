@@ -128,7 +128,7 @@ pipeline {
         stage ('Canary - 100%') {
             steps {
                 script {
-                    sh "kubectl annotate --overwrite service ${params.SERVICE_NAME} l5d=/src/${params.SERVICE_NAME}-${params.IMAGE_TAG}"
+                    sh "kubectl annotate --overwrite service ${params.SERVICE_NAME} l5d=/svc/${params.SERVICE_NAME}-${params.IMAGE_TAG}"
                 }
             }
         }
