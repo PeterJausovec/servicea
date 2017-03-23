@@ -26,7 +26,7 @@ app.get('/redirect/routename', function (req, res) {
 });
 
 app.get('/api/ping', function (req, res) {
-    res.send('Version: 99999');
+    res.send('Version: 1');
 });
 // api ------------------------------------------------------------
 app.get('/api', function (req, res) {
