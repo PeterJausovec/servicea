@@ -37,7 +37,7 @@ pipeline {
                 script {
                     env.STABLE_SERVICE_EXISTS = false;
                     try {
-                        env.EXISTING_SERVICE_NAME = sh "kubectl get service --selector=run=${params.SERVICE_NAME}-stable -o jsonpath='{.items[0].metadata.name}'"
+                        env.EXISTING_SERVICE_NAME = sh "kubectl get service --selector=via=${params.SERVICE_NAME},track=stable -o jsonpath='{.items[0].metadata.name}'"
                     } catch (exc) {
                         env.STABLE_SERVICE_EXISTS = false;
                         env.EXISTING_SERVICE_NAME = '';
