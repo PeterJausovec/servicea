@@ -36,6 +36,9 @@ pipeline {
                         env.EXISTING_SERVICE_NAME = '';
                     }
 
+                    echo "STABLE SERVICE EXISTS: ${env.STABLE_SERVICE_EXISTS}"
+                    echo "EXISTING SERVICE NAME: ${env.EXISTING_SERVICE_NAME}"
+                    
                     if (env.STABLE_SERVICE_EXISTS == true) {
                         // Do the canary
                         // Stable service exists, deploy to canary
