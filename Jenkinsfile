@@ -22,7 +22,7 @@ pipeline {
                     }
 
                     sh '''
-                        LOGICAL_IP=$(kubectl get service ${params.SERVICE_NAME} -o go-template={{.spec.clusterIP}})
+                        export LOGICAL_IP=$(kubectl get service ${params.SERVICE_NAME} -o go-template={{.spec.clusterIP}})
                         until [ "$(curl --connect-timeout 1 -s $(LOGICAL_IP)" ]; do echo -n .; done
                         '''
                     env.LOGICAL_SERVICE_IP = sh(returnStdout: true, script: "kubectl get service ${params.SERVICE_NAME} -o go-template={{.spec.clusterIP}}")
