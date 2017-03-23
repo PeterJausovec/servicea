@@ -109,14 +109,12 @@ pipeline {
                     sh "kubectl annotate --overwrite service ${params.SERVICE_NAME} l5d=/svc/${params.SERVICE_NAME}-${params.IMAGE_TAG}"
 
                     env.EXISTING_SERVICE_NAME = sh(returnStdout: true, script:"kubectl get service --selector=via=${params.SERVICE_NAME},track=stable -o jsonpath='{.items[0].metadata.name}'")
-                    echo "Delete the original deployment: ${env.EXISTING_SERVICE_NAME}"
-                    sh "kubectl delete deployment, service -l run=${env.EXISTING_SERVICE_NAME}"
+                    echo "Delete the original deployment and service: ${env.EXISTING_SERVICE_NAME}"
+                    sh "kubectl delete deployment -l run=${env.EXISTING_SERVICE_NAME}"
+                    sh "kubectl delete service -l run=${env.EXISTING_SERVICE_NAME}"
 
                     echo "Re-label canary version as stable version"
                     sh "kubectl label --overwrite service ${params.SERVICE_NAME}-${params.IMAGE_TAG} track=stable"
-
-                    // Dummy wait step
-                    env.DEPLOY_TO_PROD = input message: 'Manual Judgement', ok:'Submit', parameters: [choice(name: 'Deploy to production?', choices: 'yes\nno', description: '')]
                 }
             }
         }
