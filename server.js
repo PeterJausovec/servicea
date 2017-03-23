@@ -26,7 +26,7 @@ app.get('/redirect/routename', function (req, res) {
 });
 
 app.get('/api/ping', function (req, res) {
-    res.send('Hello ZZZZZ');
+    res.send('Hello HELLO!!!');
 });
 // api ------------------------------------------------------------
 app.get('/api', function (req, res) {

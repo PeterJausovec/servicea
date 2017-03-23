@@ -91,19 +91,19 @@ pipeline {
                 script {
                     echo "Rolling out canary version to 5% of users..."
                     sh "kubectl annotate --overwrite service ${params.SERVICE_NAME} l5d=\"95*/label/track/stable/${params.SERVICE_NAME} & 5*/label/track/canary/${params.SERVICE_NAME}\""
-                    sleep(120000)
+                    sleep 120
 
                     echo "Rolling out canary version to 10% of users..."
                     sh "kubectl annotate --overwrite service ${params.SERVICE_NAME} l5d=\"90*/label/track/stable/${params.SERVICE_NAME} & 10*/label/track/canary/${params.SERVICE_NAME}\""
-                    sleep(120000)
+                    sleep 120
 
                     echo "Rolling out canary version to 25% of users..."
                     sh "kubectl annotate --overwrite service ${params.SERVICE_NAME} l5d=\"75*/label/track/stable/${params.SERVICE_NAME} & 25*/label/track/canary/${params.SERVICE_NAME}\""
-                    sleep(120000)
+                    sleep 120
 
                     echo "Rolling out canary version to 50% of users..."
                     sh "kubectl annotate --overwrite service ${params.SERVICE_NAME} l5d=\"50*/label/track/stable/${params.SERVICE_NAME} & 50*/label/track/canary/${params.SERVICE_NAME}\""
-                    sleep(120000)
+                    sleep 120
 
                     echo "Rolling out canary version to 100% of users..."
                     sh "kubectl annotate --overwrite service ${params.SERVICE_NAME} l5d=/svc/${params.SERVICE_NAME}-${params.IMAGE_TAG}"
