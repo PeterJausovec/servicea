@@ -15,10 +15,7 @@ pipeline {
             steps {
                 echo "Deploy L5D"
                 sh 'kubectl apply -f https://raw.githubusercontent.com/stepro/k8s-l5d/master/l5d.yaml'
-            }
-        }
-        stage ('Create logical service') {
-            steps {
+
                 echo "Create a logical service for: ${params.SERVICE_NAME}"
                 script {
                     try {
@@ -29,11 +26,7 @@ pipeline {
                     env.LOGICAL_SERVICE_IP = sh(returnStdout: true, script: "kubectl get service ${params.SERVICE_NAME} -o go-template={{.spec.clusterIP}}")
                 }
                 echo "Logical service IP: ${env.LOGICAL_SERVICE_IP}"
-            }
-        }
-        // Check if {service_name}-stable exists - if it doesn't, it's the first deployment
-        stage ('Check for existing service') {
-            steps {
+
                 script {
                     env.STABLE_SERVICE_EXISTS = true;
                     try {
@@ -42,43 +35,33 @@ pipeline {
                         env.STABLE_SERVICE_EXISTS = false;
                         env.EXISTING_SERVICE_NAME = '';
                     }
-                }
-            }
-        }
-        stage ('Check & deploy the stable service') {
-            when {
-                environment name: 'STABLE_SERVICE_EXISTS', value: 'false'
-            }
-            steps {
-                // Stable service doesn't exist yet (first deployment)
-                echo "Deploying the stable service image: ${params.REGISTRY_URL}/${params.IMAGE_NAME}:${params.IMAGE_TAG}"
-                sh "kubectl run ${params.SERVICE_NAME}-${params.IMAGE_TAG} --image=${params.REGISTRY_URL}/${params.IMAGE_NAME}:${params.IMAGE_TAG} --port=80"
-                sh "kubectl expose deployment ${params.SERVICE_NAME}-${params.IMAGE_TAG} -l via=${params.SERVICE_NAME},track=stable,run=${params.SERVICE_NAME}-${params.IMAGE_TAG} --port=80"
-                sh "kubectl annotate service ${params.SERVICE_NAME} l5d=/svc/${params.SERVICE_NAME}-${params.IMAGE_TAG}"
-                script {
-                    // TODO: Wait for the service IP to become available
-                    env.SERVICE_STABLE_IP=sh(returnStdout: true, script: "kubectl get service ${params.SERVICE_NAME}-${params.IMAGE_TAG} -o go-template={{.spec.clusterIP}}")
-                }
-                echo "STABLE SERVICE IP: ${env.SERVICE_STABLE_IP}"
-            }
-        }
-        stage ('Check & deploy the canary service') {
-            when {
-                environment name: 'STABLE_SERVICE_EXISTS', value: 'true'
-            }
-            steps {
-                // Stable service exists, deploy to canary
-                echo 'Stable service exists - deploy the canary version'
-                echo "Deploying the canary service image: ${params.REGISTRY_URL}/${params.IMAGE_NAME}:${params.IMAGE_TAG}"
-                sh "kubectl run ${params.SERVICE_NAME}-${params.IMAGE_TAG} --image=${params.REGISTRY_URL}/${params.IMAGE_NAME}:${params.IMAGE_TAG} --port=80"
-                sh "kubectl expose deployment ${params.SERVICE_NAME}-${params.IMAGE_TAG} -l via=${params.SERVICE_NAME},track=canary,run=${params.SERVICE_NAME}-${params.IMAGE_TAG} --port=80"
-                script {
-                    // TODO: Wait for the service IP to become available
-                    env.SERVICE_CANARY_IP=sh(returnStdout: true, script: "kubectl get service ${params.SERVICE_NAME}-${params.IMAGE_TAG} -o go-template={{.spec.clusterIP}}")
-                }
-                echo "CANARY SERVICE IP: ${env.SERVICE_STABLE_IP}"
-                script {
-                    env.CANARY_ROLLOUT=true;
+
+                    if (env.STABLE_SERVICE_EXISTS == true) {
+                        // Do the canary
+                        // Stable service exists, deploy to canary
+                        echo 'Stable service exists - deploy the canary version'
+                        echo "Deploying the canary service image: ${params.REGISTRY_URL}/${params.IMAGE_NAME}:${params.IMAGE_TAG}"
+                        sh "kubectl run ${params.SERVICE_NAME}-${params.IMAGE_TAG} --image=${params.REGISTRY_URL}/${params.IMAGE_NAME}:${params.IMAGE_TAG} --port=80"
+                        sh "kubectl expose deployment ${params.SERVICE_NAME}-${params.IMAGE_TAG} -l via=${params.SERVICE_NAME},track=canary,run=${params.SERVICE_NAME}-${params.IMAGE_TAG} --port=80"
+                        script {
+                            // TODO: Wait for the service IP to become available
+                            env.SERVICE_CANARY_IP=sh(returnStdout: true, script: "kubectl get service ${params.SERVICE_NAME}-${params.IMAGE_TAG} -o go-template={{.spec.clusterIP}}")
+                        }
+                        echo "CANARY SERVICE IP: ${env.SERVICE_STABLE_IP}"
+                        env.CANARY_ROLLOUT=true;
+                    } else {
+                        // Deploy the stable version of the service
+                        // Stable service doesn't exist yet (first deployment)
+                        echo "Deploying the stable service image: ${params.REGISTRY_URL}/${params.IMAGE_NAME}:${params.IMAGE_TAG}"
+                        sh "kubectl run ${params.SERVICE_NAME}-${params.IMAGE_TAG} --image=${params.REGISTRY_URL}/${params.IMAGE_NAME}:${params.IMAGE_TAG} --port=80"
+                        sh "kubectl expose deployment ${params.SERVICE_NAME}-${params.IMAGE_TAG} -l via=${params.SERVICE_NAME},track=stable,run=${params.SERVICE_NAME}-${params.IMAGE_TAG} --port=80"
+                        sh "kubectl annotate service ${params.SERVICE_NAME} l5d=/svc/${params.SERVICE_NAME}-${params.IMAGE_TAG}"
+                        script {
+                            // TODO: Wait for the service IP to become available
+                            env.SERVICE_STABLE_IP=sh(returnStdout: true, script: "kubectl get service ${params.SERVICE_NAME}-${params.IMAGE_TAG} -o go-template={{.spec.clusterIP}}")
+                        }
+                        echo "STABLE SERVICE IP: ${env.SERVICE_STABLE_IP}"
+                    }
                 }
             }
         }
