@@ -77,8 +77,8 @@ pipeline {
                     env.SERVICE_CANARY_IP=sh(returnStdout: true, script: "kubectl get service ${params.SERVICE_NAME}-canary -o go-template={{.spec.clusterIP}}")
                 }
                 echo "CANARY SERVICE IP: ${env.SERVICE_STABLE_IP}"
-                env.CANARY_ROLLOUT=true;
                 script {
+                    env.CANARY_ROLLOUT=true;
                     env.DEPLOY_TO_PROD = input message: 'Manual Judgement', ok:'Submit', parameters: [choice(name: 'Deploy to production?', choices: 'yes\nno', description: '')]
                 }
             }
