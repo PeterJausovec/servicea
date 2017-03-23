@@ -78,20 +78,21 @@ pipeline {
                 echo "CANARY SERVICE IP: ${env.SERVICE_STABLE_IP}"
                 script {
                     env.CANARY_ROLLOUT=true;
-                    env.DEPLOY_TO_PROD = input message: 'Manual Judgement', ok:'Submit', parameters: [choice(name: 'Deploy to production?', choices: 'yes\nno', description: '')]
                 }
             }
         }
-        stage ('Canary rollout') {
+        stage ('Canary Rollout') {
             when {
                 environment name: 'CANARY_ROLLOUT', value: 'true'
             }
             steps {
-                echo "DO THE CANARY ROLLOUT HERE!!!!"
+                echo "Starting Canary Rollout"
                 script {
-                    [5, 10, 25, 50, 75, 100].each {
-                        echo "STEP: ${it}"
-                    }
+                    echo "Rolling out canary version to 5% of users..."
+                    sh "kubectl annotate --overwrite service ${params.SERVICE_NAME} l5d=\"95*/label/track/stable/${params.SERVICE_NAME} & 5*/label/track/canary/${params.SERVICE_NAME}\""
+
+                    // Dummy wait step
+                    env.DEPLOY_TO_PROD = input message: 'Manual Judgement', ok:'Submit', parameters: [choice(name: 'Deploy to production?', choices: 'yes\nno', description: '')]
                 }
             }
         }
