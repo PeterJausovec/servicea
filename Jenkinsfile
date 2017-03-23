@@ -23,10 +23,8 @@ pipeline {
                         // TODO: wait until IP becomes available
                         env.LOGICAL_SERVICE_IP = sh(returnStdout: true, script: "kubectl get service ${params.SERVICE_NAME} -o go-template={{.spec.clusterIP}}")
                     }
-                }
-                echo "Logical service IP: ${env.LOGICAL_SERVICE_IP}"
 
-                script {
+                    echo "Logical service IP: ${env.LOGICAL_SERVICE_IP}"
                     env.STABLE_SERVICE_EXISTS = true;
                     try {
                         env.EXISTING_SERVICE_NAME = sh(returnStdout: true, script: "kubectl get service --selector=via=${params.SERVICE_NAME},track=stable -o jsonpath='{.items[0].metadata.name}'")
