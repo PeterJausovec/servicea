@@ -130,6 +130,7 @@ pipeline {
         }
         failure {
             echo "Failure"
+        }
     }
 }
 
