@@ -44,82 +44,67 @@ pipeline {
                 }
             }
         }
-        stage ('Check & deploy the canary service') {
-             when {
-                environment name: 'STABLE_SERVICE_EXISTS', value: 'true'
-            }
-            steps {
-                // Stable service exists, deploy to canary
-                echo 'Stable service exists - do the canary'
-            }
-        }
         stage ('Check & deploy the stable service') {
             when {
                 environment name: 'STABLE_SERVICE_EXISTS', value: 'false'
             }
             steps {
-                // Stable service exists, deploy to canary
+                // Stable service doesn't exist yet (first deployment)
                 echo "Deploying the stable service image: ${params.REGISTRY_URL}/${params.IMAGE_NAME}:${params.IMAGE_TAG}"
                 sh "kubectl run ${params.SERVICE_NAME}-stable --image=${params.REGISTRY_URL}/${params.IMAGE_NAME}:${params.IMAGE_TAG} --port=80"
                 sh "kubectl expose deployment ${params.SERVICE_NAME}-stable -l via=${params.SERVICE_NAME},track=stable,run=${params.SERVICE_NAME}-stable --port=80"
                 sh "kubectl annotate service ${params.SERVICE_NAME} l5d=/svc/${params.SERVICE_NAME}-stable"
                 script {
+                    // TODO: Wait for the service IP to become available
                     env.SERVICE_STABLE_IP=sh(returnStdout: true, script: "kubectl get service ${params.SERVICE_NAME}-stable -o go-template={{.spec.clusterIP}}")
                 }
                 echo "STABLE SERVICE IP: ${env.SERVICE_STABLE_IP}"
+            }
+        }
+        stage ('Check & deploy the canary service') {
+            when {
+                environment name: 'STABLE_SERVICE_EXISTS', value: 'true'
+            }
+            steps {
+                // Stable service exists, deploy to canary
+                echo 'Stable service exists - deploy the canary version'
+                echo "Deploying the canary service image: ${params.REGISTRY_URL}/${params.IMAGE_NAME}:${params.IMAGE_TAG}"
+                sh "kubectl run ${params.SERVICE_NAME}-canary --image=${params.REGISTRY_URL}/${params.IMAGE_NAME}:${params.IMAGE_TAG} --port=80"
+                sh "kubectl expose deployment ${params.SERVICE_NAME}-canary -l via=${params.SERVICE_NAME},track=canary,run=${params.SERVICE_NAME}-canary --port=80"
+                sh "kubectl annotate service ${params.SERVICE_NAME} l5d=/svc/${params.SERVICE_NAME}-canary"
+                script {
+                    // TODO: Wait for the service IP to become available
+                    env.SERVICE_CANARY_IP=sh(returnStdout: true, script: "kubectl get service ${params.SERVICE_NAME}-canary -o go-template={{.spec.clusterIP}}")
+                }
+                echo "CANARY SERVICE IP: ${env.SERVICE_STABLE_IP}"
+                env.CANARY_ROLLOUT=true;
                 script {
                     env.DEPLOY_TO_PROD = input message: 'Manual Judgement', ok:'Submit', parameters: [choice(name: 'Deploy to production?', choices: 'yes\nno', description: '')]
                 }
             }
         }
-
-        // stage ('Deploy the canary') {
-        //     steps {
-        //         sh "kubectl run ${params.SERVICE_NAME}-canary --image=${params.REGISTRY_URL}/${params.IMAGE_NAME}:${params.IMAGE_TAG} --port=80"
-        //         sh "kubectl expose deployment ${params.SERVICE_NAME}-canary -l via=${params.SERVICE_NAME},track=canary,run=${params.SERVICE_NAME}-canary --port=80"
-        //         sh "kubectl annotate service ${params.SERVICE_NAME}-canary l5d=/svc/${params.SERVICE_NAME}-canary"
-        //         script {
-        //             env.SERVICE_CANARY_IP=sh(returnStdout: true, script: "kubectl get service ${params.SERVICE_NAME}-canary -o go-template={{.spec.clusterIP}}")
-        //         }
-        //         echo "CANARY IP: ${env.SERVICE_CANARY_IP}"
-        //         script {
-        //             env.DEPLOY_TO_PROD = input message: 'Manual Judgement', ok:'Submit', parameters: [choice(name: 'Deploy to production?', choices: 'yes\nno', description: '')]
-        //         }
-        //     }
-        // }
-        // stage ('Deploy to Dev namespace') {
-        //     steps {
-        //         echo "Preparing YAML file"
-        //         sh "sed -ie 's~IMAGENAME~${params.REGISTRY_URL}/${params.IMAGE_NAME}:${params.IMAGE_TAG}~g' servicea.yaml"
-
-        //         echo "Deploying image ${params.REGISTRY_URL}/${params.IMAGE_NAME}:${params.IMAGE_TAG}"
-        //         sh '''kubectl apply -f servicea.yaml'''
-
-        //         script {
-        //             env.DEPLOY_TO_PROD = input message: 'Manual Judgement', ok:'Submit', parameters: [choice(name: 'Deploy to production?', choices: 'yes\nno', description: '')]
-        //         }
-        //         echo "${env.DEPLOY_TO_PROD}"
-        //     }
-        // }
-        // stage ('Deploy to Prod namespace') {
-        //     when {
-        //         environment name: 'DEPLOY_TO_PROD', value: 'yes'
-        //     }
-        //     steps {
-        //         echo 'deploying to prod'
-        //     }
-        // }
+        stage ('Canary rollout') {
+            when {
+                environment name: 'CANARY_ROLLOUT', value: 'true'
+            }
+            steps {
+                echo "DO THE CANARY ROLLOUT HERE!!!!"
+            }
+        }
     }
     post {
         always {
             echo "Deployment completed."
+            echo "Deleting Canary service"
             sh "kubectl delete deployment,service -l run=${params.SERVICE_NAME}-canary"
         }
         success {
             echo "Deployment succeeded."
         }
         failure {
-            echo "Rolling back - cleanup"
+            echo "Failure - removing both stable and canary versions"
+            sh "kubectl delete deployment,service -l run=${params.SERVICE_NAME}-canary"
+            sh "kubectl delete deployment,service -l run=${params.SERVICE_NAME}-stable"
         }
     }
 }
