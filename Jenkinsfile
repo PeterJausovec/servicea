@@ -37,7 +37,7 @@ pipeline {
                 script {
                     env.STABLE_SERVICE_EXISTS = false;
                     try {
-                        env.EXISTING_SERVICE_NAME = sh "kubectl get --selector=run=${params.SERVICE_NAME}-stable -o jsonpath='{.items[0].metadata.name}'"
+                        env.EXISTING_SERVICE_NAME = sh "kubectl get service --selector=run=${params.SERVICE_NAME}-stable -o jsonpath='{.items[0].metadata.name}'"
                     } catch (exc) {
                         env.STABLE_SERVICE_EXISTS = false;
                         env.EXISTING_SERVICE_NAME = '';
@@ -124,17 +124,12 @@ pipeline {
         always {
             echo "Deployment completed."
             echo "Deleting Canary service"
-            sh "kubectl delete deployment,service -l run=${params.SERVICE_NAME}-canary"
         }
         success {
             echo "Deployment succeeded."
         }
         failure {
-            echo "Failure - removing all services (logical, canary, stable)"
-            sh "kubectl delete deployment,service -l run=${params.SERVICE_NAME}"
-            sh "kubectl delete deployment,service -l run=${params.SERVICE_NAME}-canary"
-            sh "kubectl delete deployment,service -l run=${params.SERVICE_NAME}-stable"
-        }
+            echo "Failure"
     }
 }
 
