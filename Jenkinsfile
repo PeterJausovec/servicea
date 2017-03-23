@@ -35,11 +35,12 @@ pipeline {
         stage ('Check for existing service') {
             steps {
                 script {
-                    env.STABLE_SERVICE_EXISTS = true;
+                    env.STABLE_SERVICE_EXISTS = false;
                     try {
-                        sh "kubectl get service ${params.SERVICE_NAME}-stable -o go-template={{.spec.clusterIP}}"
+                        env.EXISTING_SERVICE_NAME = sh "kubectl get --selector=run=${params.SERVICE_NAME}-stable -o jsonath='{.items[0].metadata.name}'"
                     } catch (exc) {
                         env.STABLE_SERVICE_EXISTS = false;
+                        env.EXISTING_SERVICE_NAME = '';
                     }
                 }
             }
@@ -51,12 +52,12 @@ pipeline {
             steps {
                 // Stable service doesn't exist yet (first deployment)
                 echo "Deploying the stable service image: ${params.REGISTRY_URL}/${params.IMAGE_NAME}:${params.IMAGE_TAG}"
-                sh "kubectl run ${params.SERVICE_NAME}-stable --image=${params.REGISTRY_URL}/${params.IMAGE_NAME}:${params.IMAGE_TAG} --port=80"
-                sh "kubectl expose deployment ${params.SERVICE_NAME}-stable -l via=${params.SERVICE_NAME},track=stable,run=${params.SERVICE_NAME}-stable --port=80"
-                sh "kubectl annotate service ${params.SERVICE_NAME} l5d=/svc/${params.SERVICE_NAME}-stable"
+                sh "kubectl run ${params.SERVICE_NAME}-${params.IMAGE_TAG} --image=${params.REGISTRY_URL}/${params.IMAGE_NAME}:${params.IMAGE_TAG} --port=80"
+                sh "kubectl expose deployment ${params.SERVICE_NAME}-${params.IMAGE_TAG} -l via=${params.SERVICE_NAME},track=stable,run=${params.SERVICE_NAME}-${params.IMAGE_TAG} --port=80"
+                sh "kubectl annotate service ${params.SERVICE_NAME} l5d=/svc/${params.SERVICE_NAME}-${params.IMAGE_TAG}"
                 script {
                     // TODO: Wait for the service IP to become available
-                    env.SERVICE_STABLE_IP=sh(returnStdout: true, script: "kubectl get service ${params.SERVICE_NAME}-stable -o go-template={{.spec.clusterIP}}")
+                    env.SERVICE_STABLE_IP=sh(returnStdout: true, script: "kubectl get service ${params.SERVICE_NAME}-${params.IMAGE_TAG} -o go-template={{.spec.clusterIP}}")
                 }
                 echo "STABLE SERVICE IP: ${env.SERVICE_STABLE_IP}"
             }
@@ -69,11 +70,11 @@ pipeline {
                 // Stable service exists, deploy to canary
                 echo 'Stable service exists - deploy the canary version'
                 echo "Deploying the canary service image: ${params.REGISTRY_URL}/${params.IMAGE_NAME}:${params.IMAGE_TAG}"
-                sh "kubectl run ${params.SERVICE_NAME}-canary --image=${params.REGISTRY_URL}/${params.IMAGE_NAME}:${params.IMAGE_TAG} --port=80"
-                sh "kubectl expose deployment ${params.SERVICE_NAME}-canary -l via=${params.SERVICE_NAME},track=canary,run=${params.SERVICE_NAME}-canary --port=80"
+                sh "kubectl run ${params.SERVICE_NAME}-${params.IMAGE_TAG} --image=${params.REGISTRY_URL}/${params.IMAGE_NAME}:${params.IMAGE_TAG} --port=80"
+                sh "kubectl expose deployment ${params.SERVICE_NAME}-${params.IMAGE_TAG} -l via=${params.SERVICE_NAME},track=canary,run=${params.SERVICE_NAME}-${params.IMAGE_TAG} --port=80"
                 script {
                     // TODO: Wait for the service IP to become available
-                    env.SERVICE_CANARY_IP=sh(returnStdout: true, script: "kubectl get service ${params.SERVICE_NAME}-canary -o go-template={{.spec.clusterIP}}")
+                    env.SERVICE_CANARY_IP=sh(returnStdout: true, script: "kubectl get service ${params.SERVICE_NAME}-${params.IMAGE_TAG} -o go-template={{.spec.clusterIP}}")
                 }
                 echo "CANARY SERVICE IP: ${env.SERVICE_STABLE_IP}"
                 script {
@@ -90,6 +91,28 @@ pipeline {
                 script {
                     echo "Rolling out canary version to 5% of users..."
                     sh "kubectl annotate --overwrite service ${params.SERVICE_NAME} l5d=\"95*/label/track/stable/${params.SERVICE_NAME} & 5*/label/track/canary/${params.SERVICE_NAME}\""
+                    sleep(120000)
+
+                    echo "Rolling out canary version to 10% of users..."
+                    sh "kubectl annotate --overwrite service ${params.SERVICE_NAME} l5d=\"90*/label/track/stable/${params.SERVICE_NAME} & 10*/label/track/canary/${params.SERVICE_NAME}\""
+                    sleep(120000)
+
+                    echo "Rolling out canary version to 25% of users..."
+                    sh "kubectl annotate --overwrite service ${params.SERVICE_NAME} l5d=\"75*/label/track/stable/${params.SERVICE_NAME} & 25*/label/track/canary/${params.SERVICE_NAME}\""
+                    sleep(120000)
+
+                    echo "Rolling out canary version to 50% of users..."
+                    sh "kubectl annotate --overwrite service ${params.SERVICE_NAME} l5d=\"50*/label/track/stable/${params.SERVICE_NAME} & 50*/label/track/canary/${params.SERVICE_NAME}\""
+                    sleep(120000)
+
+                    echo "Rolling out canary version to 100% of users..."
+                    sh "kubectl annotate --overwrite service ${params.SERVICE_NAME} l5d=/svc/${params.SERVICE_NAME}-${params.IMAGE_TAG}"
+
+                    echo "Delete the original deployment: ${env.EXISTING_SERVICE_NAME}"
+                    sh "kubectl delete deployment, service -l run=${env.EXISTING_SERVICE_NAME}"
+
+                    echo "Re-label canary version as stable version"
+                    sh "kubectl label --overwrite service ${params.SERVICE_NAME}-${params.IMAGE_TAG} track=stable"
 
                     // Dummy wait step
                     env.DEPLOY_TO_PROD = input message: 'Manual Judgement', ok:'Submit', parameters: [choice(name: 'Deploy to production?', choices: 'yes\nno', description: '')]
