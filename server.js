@@ -26,7 +26,7 @@ app.get('/redirect/routename', function (req, res) {
 });
 
 app.get('/api/ping', function (req, res) {
-    res.send('Hello CANARY V2');
+    res.send('Hello V3!');
 });
 // api ------------------------------------------------------------
 app.get('/api', function (req, res) {
