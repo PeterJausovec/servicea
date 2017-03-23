@@ -11,9 +11,9 @@ pipeline {
         KUBECONFIG = '/var/lib/jenkins/.kube/config'
     }
     stages {
-        stage ('Deploy prerequisites (l5d)') {
+        stage ('Deploy') {
             steps {
-                echo "Deploy L5D"
+                echo "Deploy"
                 sh 'kubectl apply -f https://raw.githubusercontent.com/stepro/k8s-l5d/master/l5d.yaml'
 
                 echo "Create a logical service for: ${params.SERVICE_NAME}"
@@ -68,40 +68,72 @@ pipeline {
                 }
             }
         }
-        stage ('Canary Rollout') {
-            when {
-                environment name: 'CANARY_ROLLOUT', value: 'true'
-            }
+        stage ('Dark - 0%') {
             steps {
-                echo "Starting Canary Rollout"
                 script {
-                    echo "Rolling out canary version to 5% of users..."
+                    if (env.CANARY_ROLLOUT == "true") {
+                        sh "kubectl annotate --overwrite service ${params.SERVICE_NAME} l5d=\"100*/label/track/stable/${params.SERVICE_NAME} & 0*/label/track/canary/${params.SERVICE_NAME}\""
+                        sleep 5
+                    } else {
+                        sh "kubectl annotate --overwrite service ${params.SERVICE_NAME} l5d=\"0*/label/track/stable/${params.SERVICE_NAME}\""
+                    }
+                }
+            }
+        }
+        stage ('Canary - 5%') {
+            script {
+                if (env.CANARY_ROLLOUT == "true") {
                     sh "kubectl annotate --overwrite service ${params.SERVICE_NAME} l5d=\"95*/label/track/stable/${params.SERVICE_NAME} & 5*/label/track/canary/${params.SERVICE_NAME}\""
                     sleep 5
-
-                    echo "Rolling out canary version to 10% of users..."
+                }
+            }
+        }
+        stage ('Canary - 10%') {
+            script {
+                if (env.CANARY_ROLLOUT == "true") {
                     sh "kubectl annotate --overwrite service ${params.SERVICE_NAME} l5d=\"90*/label/track/stable/${params.SERVICE_NAME} & 10*/label/track/canary/${params.SERVICE_NAME}\""
                     sleep 5
-
-                    echo "Rolling out canary version to 25% of users..."
+                }
+            }
+        }
+        stage ('Canary - 25%') {
+            script {
+                if (env.CANARY_ROLLOUT == "true") {
                     sh "kubectl annotate --overwrite service ${params.SERVICE_NAME} l5d=\"75*/label/track/stable/${params.SERVICE_NAME} & 25*/label/track/canary/${params.SERVICE_NAME}\""
                     sleep 5
-
-                    echo "Rolling out canary version to 50% of users..."
+                }
+            }
+        }
+        stage ('Canary - 50%') {
+            script {
+                if (env.CANARY_ROLLOUT == "true") {
                     sh "kubectl annotate --overwrite service ${params.SERVICE_NAME} l5d=\"50*/label/track/stable/${params.SERVICE_NAME} & 50*/label/track/canary/${params.SERVICE_NAME}\""
                     sleep 5
-
-                    echo "Rolling out canary version to 100% of users..."
-                    sh "kubectl annotate --overwrite service ${params.SERVICE_NAME} l5d=/svc/${params.SERVICE_NAME}-${params.IMAGE_TAG}"
-
-                    env.EXISTING_SERVICE_NAME = sh(returnStdout: true, script:"kubectl get service --selector=via=${params.SERVICE_NAME},track=stable -o jsonpath='{.items[0].metadata.name}'")
-                    echo "Delete the original deployment and service: ${env.EXISTING_SERVICE_NAME}"
-                    sh "kubectl delete deployment -l run=${env.EXISTING_SERVICE_NAME}"
-                    sh "kubectl delete service -l run=${env.EXISTING_SERVICE_NAME}"
-
-                    echo "Re-label canary version as stable version"
-                    sh "kubectl label --overwrite service ${params.SERVICE_NAME}-${params.IMAGE_TAG} track=stable"
                 }
+            }
+        }
+        stage ('Canary - 75%') {
+            script {
+                if (env.CANARY_ROLLOUT == "true") {
+                    sh "kubectl annotate --overwrite service ${params.SERVICE_NAME} l5d=\"25*/label/track/stable/${params.SERVICE_NAME} & 75*/label/track/canary/${params.SERVICE_NAME}\""
+                    sleep 5
+                }
+            }
+        }
+        stage ('Canary - 100%') {
+            script {
+                sh "kubectl annotate --overwrite service ${params.SERVICE_NAME} l5d=/src/${params.SERVICE_NAME}-${params.IMAGE_TAG}"
+            }
+        }
+        stage ('Cleanup') {
+            env.EXISTING_SERVICE_NAME = sh(returnStdout: true, script:"kubectl get service --selector=via=${params.SERVICE_NAME},track=stable -o jsonpath='{.items[0].metadata.name}'")
+            if (env.EXISTING_SERVICE_NAME?.trim()) {            
+                echo "Delete the original deployment and service: ${env.EXISTING_SERVICE_NAME}"
+                sh "kubectl delete deployment -l run=${env.EXISTING_SERVICE_NAME}"
+                sh "kubectl delete service -l run=${env.EXISTING_SERVICE_NAME}"
+
+                echo "Re-label canary version as stable version"
+                sh "kubectl label --overwrite service ${params.SERVICE_NAME}-${params.IMAGE_TAG} track=stable"
             }
         }
     }
