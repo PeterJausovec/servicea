@@ -3,9 +3,10 @@ pipeline {
     agent any
     parameters {
         string(name:'REGISTRY_URL', defaultValue: 'acrfznilp.azurecr.io', description: 'docker image repository')
-        string(name:'IMAGE_NAME', defaultValue: 'peterj/service-a', description: 'image name')
-        string(name:'IMAGE_TAG', defaultValue:'19', description: 'image tag (should be build number)')
-        string(name:'SERVICE_NAME', defaultValue:'service-a', description: 'Service name that is being deployed')
+        string(name:'IMAGE_NAME', defaultValue: 'bikesharing/reservations', description: 'image name')
+        string(name:'IMAGE_TAG', defaultValue:'ccbebcd', description: 'image tag (should be build number)')
+        // TODO: create a bikesharing namespace
+        string(name:'SERVICE_NAME', defaultValue:'reservations', description: 'Service name that is being deployed')
     }
     environment {
         KUBECONFIG = '/var/lib/jenkins/.kube/config'
